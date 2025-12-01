@@ -1,0 +1,32 @@
+body {
+    color: white;
+    margin: 0;
+    padding: 0;
+    /* display: flex; */
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+h1{
+    font-family: papyrus, 'Comic Sans MS', serif;
+    }
+p{
+    border: 2px solid blueviolet;
+    padding: 5px;
+    margin; 10px;
+    }
+        img{
+            border: 2px solid blueviolet;
+        }
+        .rizz{
+            border: 2px solid blue;
+        }
+        .rizz:hover{
+            font-size: 200%;
+            text-decoration: line-through;
+        }
+        li:hover{
+            background-color: lightblue;
+        }
