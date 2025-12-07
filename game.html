@@ -1,59 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
-        <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
-        <link rel="shortcut icon" href="/favicons/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="Gardnercraft" />
-        <link rel="manifest" href="/favicons/site.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
+    <link rel="shortcut icon" href="/favicons/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Gardnercraft" />
+    <link rel="manifest" href="/favicons/site.webmanifest" />
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Shooter</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: #000;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            border: 2px solid #fff;
-            background: #001;
-        }
-        #gameOver {
-            position: absolute;
-            color: white;
-            font-size: 48px;
-            display: none;
-        }
-    </style>
+    <title>Space Shooter (AI generated game)</title>
+
+    <link rel="stylesheet" href="dark_theme.css">
+
 </head>
 <body>
-    <a href="index.html">Home</a>
-    <a href="vibe.html">vibe</a>
-    <a href="https://wiki.gardnercraft.dedyn.io">Gardnercraft wiki</a>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="gameOver">GAME OVER<br><span style="font-size: 24px;">Press SPACE to restart</span></div>
+    <nav>
+        <a href="https://wiki.gardnercraft.dedyn.io">
+            <img src="/favicons/favicon.svg" alt="Logo" class="nav-logo">
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <!-- <a href="vibe.html">Vibe</a> -->
+            <a href="chat_bot.html">cougar football chat bot</a>
+            <a href="#" aria-current="page">AI Generated Game</a>
+            <!-- <a href="https://wiki.gardnercraft.dedyn.io">Gardnercraft Wiki</a> -->
+            <!-- <a href="pos.html">CSS Testing</a> -->
+            <!-- <a href="svg.html">Portable Wii U Diagram</a> -->
+            <a href="portable_wii_u_guide.html">Portable Wii U Diagram</a>
+            <a href="resume.html">Resume</a>
+            <a href="minecraft_facts.html">Minecraft Facts</a>
+        </div>
+    </nav>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="gameOver">
+            GAME OVER<br>
+            <span style="font-size: 24px;">Press SPACE to restart</span>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const gameOverDiv = document.getElementById('gameOver');
 
+        // Base dimensions (aspect ratio 4:3)
+        const BASE_WIDTH = 800;
+        const BASE_HEIGHT = 600;
+        let scale = 1;
+
         // Game state
         let gameRunning = true;
-        let score = 0; 
+        let score = 0;
 
         // Player
         const player = {
-            x: canvas.width / 2 - 20,
-            y: canvas.height - 60,
+            x: BASE_WIDTH / 2 - 20,
+            y: BASE_HEIGHT - 60,
             width: 40,
             height: 40,
             speed: 5,
@@ -70,20 +76,45 @@
         let enemies = [];
         const enemySpeed = 2;
         let enemySpawnTimer = 0;
-        const enemySpawnRate = 60; // frames
+        const enemySpawnRate = 60;
 
         // Controls
         const keys = {};
 
-        // Event listeners
+        // Resize canvas to fit window
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            // Calculate scale to fit container while maintaining aspect ratio
+            const scaleX = containerWidth / BASE_WIDTH;
+            const scaleY = containerHeight / BASE_HEIGHT;
+            scale = Math.min(scaleX, scaleY, 1.5); // Cap at 1.5x for very large screens
+
+            canvas.width = BASE_WIDTH * scale;
+            canvas.height = BASE_HEIGHT * scale;
+
+            // Scale the context
+            ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        }
+
+        // Initial resize
+        resizeCanvas();
+
+        // Resize on window resize
+        window.addEventListener('resize', resizeCanvas);
+
         document.addEventListener('keydown', (e) => {
             keys[e.key] = true;
-            
+
             if (e.key === ' ' && gameRunning) {
+                e.preventDefault();
                 shootBullet();
             }
-            
+
             if (e.key === ' ' && !gameRunning) {
+                e.preventDefault();
                 restartGame();
             }
         });
@@ -92,21 +123,18 @@
             keys[e.key] = false;
         });
 
-        // Player movement
         function movePlayer() {
             if (keys['ArrowLeft'] && player.x > 0) {
                 player.x -= player.speed;
             }
-            if (keys['ArrowRight'] && player.x + player.width < canvas.width) {
+            if (keys['ArrowRight'] && player.x + player.width < BASE_WIDTH) {
                 player.x += player.speed;
             }
         }
 
-        // Draw player
         function drawPlayer() {
             ctx.fillStyle = '#0f0';
             ctx.fillRect(player.x, player.y, player.width, player.height);
-            // Draw ship details
             ctx.fillStyle = '#0a0';
             ctx.beginPath();
             ctx.moveTo(player.x + player.width / 2, player.y - 10);
@@ -116,7 +144,6 @@
             ctx.fill();
         }
 
-        // Shoot bullet
         function shootBullet() {
             bullets.push({
                 x: player.x + player.width / 2 - bulletWidth / 2,
@@ -126,7 +153,6 @@
             });
         }
 
-        // Update bullets
         function updateBullets() {
             bullets = bullets.filter(bullet => bullet.y > 0);
             bullets.forEach(bullet => {
@@ -134,7 +160,6 @@
             });
         }
 
-        // Draw bullets
         function drawBullets() {
             ctx.fillStyle = '#ff0';
             bullets.forEach(bullet => {
@@ -142,11 +167,10 @@
             });
         }
 
-        // Spawn enemies
         function spawnEnemy() {
             const size = 30 + Math.random() * 20;
             enemies.push({
-                x: Math.random() * (canvas.width - size),
+                x: Math.random() * (BASE_WIDTH - size),
                 y: -size,
                 width: size,
                 height: size,
@@ -154,7 +178,6 @@
             });
         }
 
-        // Update enemies
         function updateEnemies() {
             enemySpawnTimer++;
             if (enemySpawnTimer > enemySpawnRate) {
@@ -162,27 +185,23 @@
                 enemySpawnTimer = 0;
             }
 
-            enemies = enemies.filter(enemy => enemy.y < canvas.height);
+            enemies = enemies.filter(enemy => enemy.y < BASE_HEIGHT);
             enemies.forEach(enemy => {
                 enemy.y += enemy.speed;
             });
         }
 
-        // Draw enemies
         function drawEnemies() {
             ctx.fillStyle = '#f00';
             enemies.forEach(enemy => {
                 ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-                // Draw enemy details
                 ctx.fillStyle = '#a00';
                 ctx.fillRect(enemy.x + 5, enemy.y + 5, enemy.width - 10, enemy.height - 10);
                 ctx.fillStyle = '#f00';
             });
         }
 
-        // Collision detection
         function checkCollisions() {
-            // Bullet-enemy collisions
             bullets.forEach((bullet, bulletIndex) => {
                 enemies.forEach((enemy, enemyIndex) => {
                     if (bullet.x < enemy.x + enemy.width &&
@@ -196,7 +215,6 @@
                 });
             });
 
-            // Player-enemy collisions
             enemies.forEach(enemy => {
                 if (player.x < enemy.x + enemy.width &&
                     player.x + player.width > enemy.x &&
@@ -207,33 +225,29 @@
             });
         }
 
-        // Draw score
         function drawScore() {
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#dbd8d4'; //color of score text
             ctx.font = '24px Arial';
             ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
-        // End game
         function endGame() {
             gameRunning = false;
             gameOverDiv.style.display = 'block';
         }
 
-        // Restart game
         function restartGame() {
             gameRunning = true;
             gameOverDiv.style.display = 'none';
             score = 0;
             bullets = [];
             enemies = [];
-            player.x = canvas.width / 2 - 20;
+            player.x = BASE_WIDTH / 2 - 20;
             enemySpawnTimer = 0;
         }
 
-        // Game loop
         function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
             if (gameRunning) {
                 movePlayer();
@@ -250,7 +264,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Start game
         gameLoop();
     </script>
 </body>
